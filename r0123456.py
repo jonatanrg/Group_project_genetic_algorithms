@@ -21,15 +21,13 @@ class r0123456:
         # Your code here.
         popSize = 40
         population = self.initPopulation(popSize, range(len(distanceMatrix[0])))
-        for gene in population:
-            print(self.getObjective(gene, distanceMatrix))
 
         nbIter = 0
         while (nbIter < 10000):
 
             selectedPop = self.selection(population)
             recombinatedPop = self.recombination(selectedPop)
-            mutatedPop = self.mutation(recombinatedPop)
+            mutatedPop = self.mutation(population)
             finalPop = self.elimination(mutatedPop)
 
             allObjectives = [self.getObjective(route, distanceMatrix) for route in finalPop]
@@ -51,8 +49,22 @@ class r0123456:
         # Your code here.
         return 0
 
-    def mutation(population):
-        return None
+    def mutation(self, offspring):
+        ii = 0
+        newOffspring = [[]]
+        mutated = []
+        while ii < len(offspring):
+            both_lists = [offspring[ii], offspring[random.randint(0, len(offspring)-1)]]
+            for item in range(len(offspring[ii])):
+                selected_list = random.choice(both_lists)
+                selected_item = random.choice(selected_list)
+                both_lists = [[ele for ele in sub if ele != selected_item] for sub in both_lists]
+                mutated.append(selected_item)
+                ii =+ 1
+            newOffspring.append(mutated)
+        newOffspring = [x for x in newOffspring if x]
+        return newOffspring
+
 
     def elimination(self, population, distanceMatrix):
         # fitness-based elimination
@@ -64,7 +76,7 @@ class r0123456:
 
         # Select size of subset population
         percentage = 0.6
-        subset_size = int(len(population)*percentage)
+        subset_size = int(len(population) * percentage)
 
         for _ in range(subset_size):
             index = random.randint(0, len(population))
@@ -76,15 +88,19 @@ class r0123456:
 
         return population
 
+
     def recombination(population):
         return None
+
 
     def selection(population):
         return None
 
+
     def generateRoute(self, cityList):
         route = random.sample(cityList, len(cityList))
         return route
+
 
     def initPopulation(self, size, cityList):
         population = list()
@@ -92,6 +108,7 @@ class r0123456:
         for _ in range(size):
             population.append(self.generateRoute(cityList))
         return population
+
 
     def getObjective(self, route, distanceMatrix):
         totalLength = 0
@@ -105,6 +122,7 @@ class r0123456:
             totalLength += self.getLength(city1, city2, distanceMatrix)
 
         return totalLength
+
 
     def getLength(self, city1, city2, distanceMatrix):
         return distanceMatrix[city1][city2]
