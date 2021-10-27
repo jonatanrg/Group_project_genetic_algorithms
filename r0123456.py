@@ -1,6 +1,6 @@
 import math 
 import random
-
+from statistics import mean
 import numpy as np
 
 import Reporter
@@ -24,12 +24,21 @@ class r0123456:
 		population = self.initPopulation(popSize, range(len(distanceMatrix[0])))
 		for gene in population:
 			print(self.getFitness(gene, distanceMatrix))
+		
+		nbIter = 0
+		while( nbIter < 10000 ):
 
+			selectedPop = self.selection(population)
+			recombinatedPop = self.recombination(selectedPop)
+			mutatedPop = self.mutation(recombinatedPop)
+			finalPop = self.elimination(mutatedPop)
 
-		while( False ):
-
-			# Your code here.
-
+			allObjectives = [self.getObjective(route, distanceMatrix) for route in finalPop]
+			
+			bestObjective = min(allObjectives)
+			meanObjective = mean(allObjectives)
+			bestSolution = finalPop[allObjectives.index(bestObjective)]
+			
 			# Call the reporter with:
 			#  - the mean objective function value of the population
 			#  - the best objective function value of the population
@@ -39,8 +48,21 @@ class r0123456:
 			if timeLeft < 0:
 				break
 
+			nbIter += 1
 		# Your code here.
 		return 0
+	
+	def mutation(population):
+		return None
+	
+	def elimination(population):
+		return None
+
+	def recombination(population):
+		return None
+
+	def selection(population):
+		return None
 
 	def generateRoute(self, cityList):
 		route = random.sample(cityList, len(cityList))
@@ -53,7 +75,7 @@ class r0123456:
 			population.append(self.generateRoute(cityList))
 		return population
 	
-	def getFitness(self, route, distanceMatrix):
+	def getObjective(self, route, distanceMatrix):
 		totalLength = 0
 		for index in range(len(route)):
 			city1 = route[index]
@@ -64,7 +86,7 @@ class r0123456:
 			
 			totalLength += self.getLength(city1, city2, distanceMatrix)
 
-		return (math.pow(10,5))/totalLength
+		return totalLength
 	
 	def getLength(self, city1, city2, distanceMatrix):
 		return distanceMatrix[city1][city2]
