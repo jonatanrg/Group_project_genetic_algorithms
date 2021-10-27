@@ -10,6 +10,7 @@ class r0123456:
 
     def __init__(self):
         self.reporter = Reporter.Reporter(self.__class__.__name__)
+        self.age = 10
 
     # The evolutionary algorithm's main loop
     def optimize(self, filename):
@@ -21,8 +22,8 @@ class r0123456:
         # Your code here.
         popSize = 40
         population = self.initPopulation(popSize, range(len(distanceMatrix[0])))
-        for gene in population:
-            print(self.getObjective(gene, distanceMatrix))
+        for route in population[:][0]:
+            print(self.getObjective(route, distanceMatrix))
 
         nbIter = 0
         while (nbIter < 10000):
@@ -30,9 +31,9 @@ class r0123456:
             selectedPop = self.selection(population)
             recombinatedPop = self.recombination(selectedPop)
             mutatedPop = self.mutation(recombinatedPop)
-            finalPop = self.elimination(mutatedPop)
+            finalPop = self.eliminationFitness(mutatedPop, distanceMatrix)
 
-            allObjectives = [self.getObjective(route, distanceMatrix) for route in finalPop]
+            allObjectives = [self.getObjective(route, distanceMatrix) for route in finalPop[:][0]]
 
             bestObjective = min(allObjectives)
             meanObjective = np.mean(allObjectives)
@@ -44,21 +45,27 @@ class r0123456:
             #  - a 1D numpy array in the cycle notation containing the best solution
             #    with city numbering starting from 0
             timeLeft = self.reporter.report(meanObjective, bestObjective, bestSolution)
+
             if timeLeft < 0:
                 break
 
             nbIter += 1
+
+            population = finalPop
+            # Update age variable for all routes
+            for age in population[:][1]:
+                age += 1
         # Your code here.
         return 0
 
     def mutation(population):
         return None
 
-    def elimination(self, population, distanceMatrix):
+    def eliminationFitness(self, population, distanceMatrix):
         # fitness-based elimination
         pop_fitness = np.zeros(len(population))
         for i in range(pop_fitness):
-            pop_fitness[i] = self.getObjective(population[i], distanceMatrix)
+            pop_fitness[i] = self.getObjective(population[i][0], distanceMatrix)
 
         mean_fitness = np.mean(pop_fitness)
 
@@ -68,11 +75,18 @@ class r0123456:
 
         for _ in range(subset_size):
             index = random.randint(0, len(population))
-            fitness = self.getObjective(population[index], distanceMatrix)
+            fitness = self.getObjective(population[index][0], distanceMatrix)
 
             # Eliminate elements with below average fitness
             if fitness < mean_fitness:
                 del population[index]
+
+        return population
+
+    def eliminationAge(self, population):
+        for route in population:
+            if route[1] > self.age:
+                population.remove(route)
 
         return population
 
@@ -90,7 +104,7 @@ class r0123456:
         population = list()
 
         for _ in range(size):
-            population.append(self.generateRoute(cityList))
+            population.append([self.generateRoute(cityList), 0])
         return population
 
     def getObjective(self, route, distanceMatrix):
