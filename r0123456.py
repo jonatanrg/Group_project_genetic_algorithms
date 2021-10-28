@@ -54,17 +54,18 @@ class r0123456:
         newOffspring = [[]]
         mutated = []
         while ii < len(offspring):
-            both_lists = [offspring[ii], offspring[random.randint(0, len(offspring)-1)]]
+            both_lists = [offspring[ii], offspring[random.randint(0, len(offspring) - 1)]]
             for item in range(len(offspring[ii])):
                 selected_list = random.choice(both_lists)
                 selected_item = random.choice(selected_list)
                 both_lists = [[ele for ele in sub if ele != selected_item] for sub in both_lists]
                 mutated.append(selected_item)
-                ii =+ 1
+                ii = + 1
             newOffspring.append(mutated)
         newOffspring = [x for x in newOffspring if x]
         return newOffspring
 
+    # todo(loris): add inverion mutation
 
     def elimination(self, population, distanceMatrix):
         # fitness-based elimination
@@ -76,7 +77,7 @@ class r0123456:
 
         # Select size of subset population
         percentage = 0.6
-        subset_size = int(len(population)*percentage)
+        subset_size = int(len(population) * percentage)
 
         for _ in range(subset_size):
             index = random.randint(0, len(population))
@@ -88,7 +89,7 @@ class r0123456:
 
         return population
 
-# returns list of children after recombination of parent pairs
+    # returns list of children after recombination of parent pairs
     def recombination(self, population):
         newPop = []
         for pair in population:
@@ -96,15 +97,15 @@ class r0123456:
             newPop.append(self.POS(pair))
         return newPop
 
-# recombination operators
+    # recombination operators
     def POS(self, parents):
         parent1 = parents[0]
         parent2 = parents[1]
         positions = []
         child = list(-1 for _ in range(len(parent1)))
 
-        for _ in range(random.randint(0,len(parent1) - 1)):
-            position = random.randint(0,len(parent1) - 1)
+        for _ in range(random.randint(0, len(parent1) - 1)):
+            position = random.randint(0, len(parent1) - 1)
             if position not in positions:
                 positions.append(position)
 
@@ -130,7 +131,7 @@ class r0123456:
         partition1 = random.randint(1, len(parent1) - 1)
         partition2 = random.randint(1, len(parent1) - 1)
 
-        lowerpartition = min(partition1,partition2)
+        lowerpartition = min(partition1, partition2)
         higherpartition = max(partition1, partition2)
 
         # middle part of parent1 is copied
@@ -147,34 +148,34 @@ class r0123456:
 
         return child
 
-	def selection(self, population, distanceMatrix):
-		"""
-		Takes the population of the new iteration,
-		applying Ranking selection (fitness-based),
-		with linear decay.
+    def selection(self, population, distanceMatrix):
+        """
+        Takes the population of the new iteration,
+        applying Ranking selection (fitness-based),
+        with linear decay.
 
-		s: selection pressure parameter. It is virtually fixed to 1 in this implementation.
-		"""
-		integerList = []
-		probabilities = []
-		allObjectives = []
-		routes = []
+        s: selection pressure parameter. It is virtually fixed to 1 in this implementation.
+        """
+        integerList = []
+        probabilities = []
+        allObjectives = []
+        routes = []
 
-		for route in population:
-			routes.append(route)
-			allObjectives.append(self.getObjective(route, distanceMatrix))
+        for route in population:
+            routes.append(route)
+            allObjectives.append(self.getObjective(route, distanceMatrix))
 
-		integerList = [i for i in range(1, len(allObjectives) + 1)]
+        integerList = [i for i in range(1, len(allObjectives) + 1)]
 
-		# sort the routes based on the ascendent objective value
-		sortedIndices = sorted(range(len(allObjectives)), key=lambda k: allObjectives[k])
-		orderedRoutes = [routes[i] for i in sortedIndices]
+        # sort the routes based on the ascendent objective value
+        sortedIndices = sorted(range(len(allObjectives)), key=lambda k: allObjectives[k])
+        orderedRoutes = [routes[i] for i in sortedIndices]
 
-		scores_sum = sum(integerList)
-		probabilities = [sortedIndices / scores_sum for index in sortedIndices]
-		newPopulation = np.random.choice(orderedRoutes, self.popSize, replace=1, p=probabilities)
+        scores_sum = sum(integerList)
+        probabilities = [sortedIndices / scores_sum for index in sortedIndices]
+        newPopulation = np.random.choice(orderedRoutes, self.popSize, replace=1, p=probabilities)
 
-		return newPopulation
+        return newPopulation
 
     def generateRoute(self, cityList):
         route = random.sample(cityList, len(cityList))
