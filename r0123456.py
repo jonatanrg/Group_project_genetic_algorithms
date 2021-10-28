@@ -18,24 +18,21 @@ class r0123456:
         distanceMatrix = np.loadtxt(file, delimiter=",")
         file.close()
         # Your code here.
-        popSize = 40
+        popSize = 1000
         population = self.initPopulation(popSize, range(len(distanceMatrix[0])))
-        for route in [i[0] for i in population]:
-            print(self.getObjective(route, distanceMatrix))
 
         nbIter = 0
-        while (nbIter < 10000):
-
+        while (nbIter < 10):
             selectedPop = self.selection(population, distanceMatrix)
             recombinatedPop = self.recombination(selectedPop)
             mutatedPop = self.mutation(recombinatedPop)
             finalPop = self.eliminationFitness(mutatedPop, distanceMatrix)
 
-            allObjectives = [self.getObjective(route, distanceMatrix) for route in finalPop[:][0]]
+            allObjectives = [self.getObjective(route[0], distanceMatrix) for route in finalPop]
 
             bestObjective = min(allObjectives)
             meanObjective = np.mean(allObjectives)
-            bestSolution = finalPop[allObjectives.index(bestObjective)]
+            bestSolution = np.array(finalPop[allObjectives.index(bestObjective)])
 
             # Call the reporter with:
             #  - the mean objective function value of the population
@@ -51,9 +48,11 @@ class r0123456:
 
             population = finalPop
             # Update age variable for all routes
-            for age in population[:][1]:
-                age += 1
+            for index in range(len(population)):
+                population[index][1] += 1
         # Your code here.
+        print('Best Solution: ', bestSolution)
+        print('Objective function output: ', bestObjective)
         return 0
 
     def mutation(self, offspring):
@@ -61,14 +60,15 @@ class r0123456:
         newOffspring = [[]]
         mutated = []
         while ii < len(offspring):
-            both_lists = [offspring[ii], offspring[random.randint(0, len(offspring) - 1)]]
-            for item in range(len(offspring[ii])):
+            both_lists = [offspring[ii][0], offspring[random.randint(0, len(offspring) - 1)][0]]
+            for item in range(len(offspring[ii][0])):
                 selected_list = random.choice(both_lists)
                 selected_item = random.choice(selected_list)
                 both_lists = [[ele for ele in sub if ele != selected_item] for sub in both_lists]
                 mutated.append(selected_item)
-                ii = + 1
-            newOffspring.append(mutated)
+            ii += 1
+            newOffspring.append([mutated, 0])
+            mutated = []
         newOffspring = [x for x in newOffspring if x]
         return newOffspring
 
@@ -77,8 +77,8 @@ class r0123456:
     def eliminationFitness(self, population, distanceMatrix):
         # fitness-based elimination
         pop_fitness = np.zeros(len(population))
-        for i in range(pop_fitness):
-            pop_fitness[i] = self.getObjective(population[i][0], distanceMatrix)
+        for index in range(len(pop_fitness)):
+            pop_fitness = self.getObjective(population[index][0], distanceMatrix)
 
         mean_fitness = np.mean(pop_fitness)
 
@@ -87,7 +87,7 @@ class r0123456:
         subset_size = int(len(population) * percentage)
 
         for _ in range(subset_size):
-            index = random.randint(0, len(population))
+            index = random.randint(0, len(population) - 1)
             fitness = self.getObjective(population[index][0], distanceMatrix)
 
             # Eliminate elements with below average fitness
@@ -113,8 +113,8 @@ class r0123456:
 
     # recombination operators
     def POS(self, parents):
-        parent1 = parents[0]
-        parent2 = parents[1]
+        parent1 = parents[0][0]
+        parent2 = parents[1][0]
         positions = []
         child = list(-1 for _ in range(len(parent1)))
 
@@ -133,11 +133,11 @@ class r0123456:
                     j += 1
                 child[i] = parent2[j]
 
-        return child
+        return [child, 0]
 
     def OX(self, parents):
-        parent1 = parents[0]
-        parent2 = parents[1]
+        parent1 = parents[0][0]
+        parent2 = parents[1][0]
         child = list(-1 for _ in range(len(parent1)))
 
         # partition 1 will take place after the position of partition1
@@ -160,7 +160,7 @@ class r0123456:
                 if j >= len(child):
                     j = 0
 
-        return child
+        return [child, 0]
 
     def selection(self, population, distanceMatrix):
         """
@@ -174,20 +174,23 @@ class r0123456:
         allObjectives = []
         routes = []
 
-        for route in [i[0] for i in population]:
+        for route in population:
             routes.append(route)
-            allObjectives.append(self.getObjective(route, distanceMatrix))
+            allObjectives.append(self.getObjective(route[0], distanceMatrix))
 
         integerList = [i for i in range(1, len(allObjectives) + 1)]
 
-        # sort the routes based on the ascendent objective value
+        # sort the routes based on the ascending objective value
         sortedIndices = sorted(range(len(allObjectives)), key=lambda k: allObjectives[k])
         orderedRoutes = [routes[i] for i in sortedIndices]
 
-        scores_sum = sum(integerList)
-        probabilities = [sortedIndices / scores_sum for index in sortedIndices]
-        newPopulation = np.random.choice(orderedRoutes, self.popSize, replace=1, p=probabilities)
+        scores_sum = sum(allObjectives)
+        probabilities = [allObjectives[index] / scores_sum for index in sortedIndices]
+        #newPopulation = np.random.choice(orderedRoutes, len(population), replace=1, p=probabilities)
+        newPopulation = [orderedRoutes[i] for i in np.random.choice(range(len(orderedRoutes)), len(population), replace=1, p=probabilities)]
+        #newPopulation = orderedRoutes[np.random.choice(range(len(orderedRoutes)), len(population), replace=1, p=probabilities)]
 
+        newPopulation = [[newPopulation[i], newPopulation[i+1]] for i in range(len(newPopulation)) if i%2 == 0]
         return newPopulation
 
     def generateRoute(self, cityList):
