@@ -1,6 +1,7 @@
 import math
 import random
 import numpy as np
+import time
 
 import Reporter
 
@@ -20,9 +21,10 @@ class r0123456:
         # Your code here.
         popSize = 1000
         population = self.initPopulation(popSize, range(len(distanceMatrix[0])))
+        start = time.time()
 
         nbIter = 0
-        while (nbIter < 10):
+        while (nbIter < 100 and len(population) > 1):
             selectedPop = self.selection(population, distanceMatrix)
             recombinatedPop = self.recombination(selectedPop)
             mutatedPop = self.mutation(recombinatedPop)
@@ -51,8 +53,11 @@ class r0123456:
             for index in range(len(population)):
                 population[index][1] += 1
         # Your code here.
-        print('Best Solution: ', bestSolution)
-        print('Objective function output: ', bestObjective)
+        end = time.time()
+
+        print('Best Solution: ' + str(bestSolution[0]))
+        print('Objective function output: ' + str(bestObjective))
+        print('Total time elapsed: ' + str(end - start) + ' seconds')
         return 0
 
     def mutation(self, offspring):
@@ -83,7 +88,7 @@ class r0123456:
         mean_fitness = np.mean(pop_fitness)
 
         # Select size of subset population
-        percentage = 0.6
+        percentage = 0.01
         subset_size = int(len(population) * percentage)
 
         for _ in range(subset_size):
@@ -105,10 +110,22 @@ class r0123456:
 
     # returns list of children after recombination of parent pairs
     def recombination(self, population):
+        # create pairs of parents, is the amount of genes in the population is uneven, the last gene is not used
+        gene = None
+        if len(population) % 2 != 0:
+            population = population[:len(population) - 1]
+            gene = population[len(population) - 1:]
+
+        population = [[population[i], population[i+1]] for i in range(len(population)) if i % 2 == 0]
+
         newPop = []
         for pair in population:
             newPop.append(self.OX(pair))
             newPop.append(self.POS(pair))
+
+        if gene is not None:
+            newPop += gene
+
         return newPop
 
     # recombination operators
@@ -190,7 +207,6 @@ class r0123456:
         newPopulation = [orderedRoutes[i] for i in np.random.choice(range(len(orderedRoutes)), len(population), replace=1, p=probabilities)]
         #newPopulation = orderedRoutes[np.random.choice(range(len(orderedRoutes)), len(population), replace=1, p=probabilities)]
 
-        newPopulation = [[newPopulation[i], newPopulation[i+1]] for i in range(len(newPopulation)) if i%2 == 0]
         return newPopulation
 
     def generateRoute(self, cityList):
