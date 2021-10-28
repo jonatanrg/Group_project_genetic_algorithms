@@ -147,8 +147,34 @@ class r0123456:
 
         return child
 
-    def selection(population):
-        return None
+	def selection(self, population, distanceMatrix):
+		"""
+		Takes the population of the new iteration,
+		applying Ranking selection (fitness-based),
+		with linear decay.
+
+		s: selection pressure parameter. It is virtually fixed to 1 in this implementation.
+		"""
+		integerList = []
+		probabilities = []
+		allObjectives = []
+		routes = []
+
+		for route in population:
+			routes.append(route)
+			allObjectives.append(self.getObjective(route, distanceMatrix))
+
+		integerList = [i for i in range(1, len(allObjectives) + 1)]
+
+		# sort the routes based on the ascendent objective value
+		sortedIndices = sorted(range(len(allObjectives)), key=lambda k: allObjectives[k])
+		orderedRoutes = [routes[i] for i in sortedIndices]
+
+		scores_sum = sum(integerList)
+		probabilities = [sortedIndices / scores_sum for index in sortedIndices]
+		newPopulation = np.random.choice(orderedRoutes, self.popSize, replace=1, p=probabilities)
+
+		return newPopulation
 
     def generateRoute(self, cityList):
         route = random.sample(cityList, len(cityList))
