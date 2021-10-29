@@ -118,31 +118,42 @@ class r0123456:
 
         population = [[population[i], population[i+1]] for i in range(len(population)) if i % 2 == 0]
 
+        # for each pair OX and POS operators are executed, childeren are added to newPop
         newPop = []
         for pair in population:
             newPop.append(self.OX(pair))
             newPop.append(self.POS(pair))
 
+        # if the population was uneven, the not used gene is added again
         if gene is not None:
             newPop += gene
 
         return newPop
 
     # recombination operators
+    # Position based crossover https://www.researchgate.net/figure/Position-based-crossover-POS_fig4_226665831
+    # Positions of 1 parent are kept and the rest is filled with the other parent
     def POS(self, parents):
+
+        # only the 'route part' of the genes are used
         parent1 = parents[0][0]
         parent2 = parents[1][0]
         positions = []
+
+        # child is initialized as a list with -1 values
         child = list(-1 for _ in range(len(parent1)))
 
+        # a random amount of positions is generated 
         for _ in range(random.randint(0, len(parent1) - 1)):
             position = random.randint(0, len(parent1) - 1)
             if position not in positions:
                 positions.append(position)
 
+        # the random generated positions of the cities from parent1 are used
         for i in positions:
             child[i] = parent1[i]
 
+        # the the rest of the child is filled with cities from parent2
         j = 0
         for i in range(len(parent2)):
             if child[i] == -1:
@@ -150,25 +161,35 @@ class r0123456:
                     j += 1
                 child[i] = parent2[j]
 
+        # new child is returned with age 0
         return [child, 0]
 
+    # Ordered crossover https://www.researchgate.net/figure/OX-Crossover-Operator-Default-Implementation_fig3_299533271
+    # Parents are divided into 3 partitions
+    # the middle partition of 1 parent is kept
+    # the rest is filled with the same order as the other parent, starting at the third partition
     def OX(self, parents):
+
+        # only the 'route part' of the genes are used
         parent1 = parents[0][0]
         parent2 = parents[1][0]
+
+        # child is initialized as a list with -1 values
         child = list(-1 for _ in range(len(parent1)))
 
-        # partition 1 will take place after the position of partition1
-        # partition 2 will take place before the position of partition2
+        # random positions of the partitions are chosen then the highes and lowest are determined as first and last partition
         partition1 = random.randint(1, len(parent1) - 1)
         partition2 = random.randint(1, len(parent1) - 1)
-
         lowerpartition = min(partition1, partition2)
         higherpartition = max(partition1, partition2)
 
-        # middle part of parent1 is copied
+        # middle part of parent1 is copied into child
         child[lowerpartition: higherpartition] = parent1[lowerpartition: higherpartition]
+
+        # parent2 is shifted so the starting point is the third partition
         parent2 = parent2[higherpartition:] + parent2[:higherpartition]
 
+        # child is filled with the positions of parent 2 starting at the third partition
         j = higherpartition
         for i in parent2:
             if i not in child:
@@ -177,6 +198,7 @@ class r0123456:
                 if j >= len(child):
                     j = 0
 
+        # new child is returned with age 0
         return [child, 0]
 
     def selection(self, population, distanceMatrix):
