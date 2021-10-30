@@ -24,7 +24,7 @@ class r0123456:
         start = time.time()
 
         nbIter = 0
-        while (nbIter < 100 and len(population) > 1):
+        while nbIter < 100 and len(population) > 1:
             selectedPop = self.selection(population, distanceMatrix)
             recombinatedPop = self.recombination(selectedPop)
             mutatedPop = self.mutation(recombinatedPop)
@@ -61,23 +61,42 @@ class r0123456:
         return 0
 
     def mutation(self, offspring):
-        ii = 0
+        # Swap mutation. Pick two genes from the population and randomly pick
+        # a node in one of the two genes to create a new route.
+        # ii = 0
+        # newOffspring = [[]]
+        # mutated = []
+        # while ii < len(offspring):
+        #     both_lists = [offspring[ii][0], offspring[random.randint(0, len(offspring) - 1)][0]]
+        #     for item in range(len(offspring[ii][0])):
+        #         selected_list = random.choice(both_lists)
+        #         selected_item = random.choice(selected_list)
+        #         both_lists = [[ele for ele in sub if ele != selected_item] for sub in both_lists]
+        #         mutated.append(selected_item)
+        #     ii += 1
+        #     newOffspring.append([mutated, 0])
+        #     mutated = []
+        # newOffspring = [x for x in newOffspring if x]
+        # return newOffspring
+
+        # todo(loris): add inverion mutation
         newOffspring = [[]]
-        mutated = []
-        while ii < len(offspring):
-            both_lists = [offspring[ii][0], offspring[random.randint(0, len(offspring) - 1)][0]]
-            for item in range(len(offspring[ii][0])):
-                selected_list = random.choice(both_lists)
-                selected_item = random.choice(selected_list)
-                both_lists = [[ele for ele in sub if ele != selected_item] for sub in both_lists]
-                mutated.append(selected_item)
-            ii += 1
+        for i in range(len(offspring)):
+            partition1 = random.randint(1, len(offspring[i][0]) - 1)
+            partition2 = random.randint(1, len(offspring[i][0]) - 1)
+            lowerpartition = min(partition1, partition2)
+            higherpartition = max(partition1, partition2)
+
+            toMutate = offspring[i][0]
+
+            mutated = toMutate[:lowerpartition] + \
+                      toMutate[lowerpartition:higherpartition][::-1] + \
+                      toMutate[higherpartition:]
+
             newOffspring.append([mutated, 0])
-            mutated = []
+
         newOffspring = [x for x in newOffspring if x]
         return newOffspring
-
-    # todo(loris): add inverion mutation
 
     def eliminationFitness(self, population, distanceMatrix):
         # fitness-based elimination
@@ -116,7 +135,7 @@ class r0123456:
             population = population[:len(population) - 1]
             gene = population[len(population) - 1:]
 
-        population = [[population[i], population[i+1]] for i in range(len(population)) if i % 2 == 0]
+        population = [[population[i], population[i + 1]] for i in range(len(population)) if i % 2 == 0]
 
         # for each pair OX and POS operators are executed, childeren are added to newPop
         newPop = []
@@ -208,8 +227,8 @@ class r0123456:
         with linear decay.
         s: selection pressure parameter. It is virtually fixed to 1 in this implementation.
         """
-        integerList = []
-        probabilities = []
+        # integerList = []
+        # probabilities = []
         allObjectives = []
         routes = []
 
@@ -217,7 +236,7 @@ class r0123456:
             routes.append(route)
             allObjectives.append(self.getObjective(route[0], distanceMatrix))
 
-        integerList = [i for i in range(1, len(allObjectives) + 1)]
+        # integerList = [i for i in range(1, len(allObjectives) + 1)]
 
         # sort the routes based on the ascending objective value
         sortedIndices = sorted(range(len(allObjectives)), key=lambda k: allObjectives[k])
@@ -225,9 +244,10 @@ class r0123456:
 
         scores_sum = sum(allObjectives)
         probabilities = [allObjectives[index] / scores_sum for index in sortedIndices]
-        #newPopulation = np.random.choice(orderedRoutes, len(population), replace=1, p=probabilities)
-        newPopulation = [orderedRoutes[i] for i in np.random.choice(range(len(orderedRoutes)), len(population), replace=1, p=probabilities)]
-        #newPopulation = orderedRoutes[np.random.choice(range(len(orderedRoutes)), len(population), replace=1, p=probabilities)]
+        # newPopulation = np.random.choice(orderedRoutes, len(population), replace=1, p=probabilities)
+        newPopulation = [orderedRoutes[i] for i in
+                         np.random.choice(range(len(orderedRoutes)), len(population), replace=True, p=probabilities)]
+        # newPopulation = orderedRoutes[np.random.choice(range(len(orderedRoutes)), len(population), replace=1, p=probabilities)]
 
         return newPopulation
 
@@ -238,8 +258,8 @@ class r0123456:
     def initPopulation(self, size, cityList):
         population = list()
 
-        for _ in range(size):
-            population.append([self.generateRoute(cityList), 0])
+        for index in range(size):
+            population.append([self.generateRoute(cityList), index])
         return population
 
     def getObjective(self, route, distanceMatrix):
