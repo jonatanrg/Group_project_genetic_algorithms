@@ -5,6 +5,8 @@ import time
 
 import Reporter
 
+print("Running")
+
 
 # Modify the class name to match your student number.
 class r0123456:
@@ -24,7 +26,7 @@ class r0123456:
         start = time.time()
 
         nbIter = 0
-        while (nbIter < 100 and len(population) > 1):
+        while (nbIter < 1000 and len(population) > 1):
             selectedPop = self.selection(population, distanceMatrix)
             recombinatedPop = self.recombination(selectedPop)
             mutatedPop = self.mutation(recombinatedPop)
@@ -47,6 +49,9 @@ class r0123456:
                 break
 
             nbIter += 1
+            print("Iteration: " , nbIter,
+                  "\t Best objective: ", bestObjective,
+                  "\t Length of population: " , len(population))
 
             population = finalPop
             # Update age variable for all routes
@@ -208,11 +213,10 @@ class r0123456:
         with linear decay.
         s: selection pressure parameter. It is virtually fixed to 1 in this implementation.
         """
-        integerList = []
-        probabilities = []
         allObjectives = []
         routes = []
 
+        # store all the current solutions (routes) and the respective Objective values
         for route in population:
             routes.append(route)
             allObjectives.append(self.getObjective(route[0], distanceMatrix))
@@ -223,11 +227,13 @@ class r0123456:
         sortedIndices = sorted(range(len(allObjectives)), key=lambda k: allObjectives[k])
         orderedRoutes = [routes[i] for i in sortedIndices]
 
-        scores_sum = sum(allObjectives)
-        probabilities = [allObjectives[index] / scores_sum for index in sortedIndices]
-        #newPopulation = np.random.choice(orderedRoutes, len(population), replace=1, p=probabilities)
+        # Ranking: linear decay implementation (we reverse the array to make the shortest routes more likely to be selected)
+        indices_sum = sum(integerList)
+        probabilities = [i / indices_sum for i in integerList]
+        probabilities.reverse()
+
+        # ATTENTION: you should change the variable "population" if you want only select a subset and not the whole input
         newPopulation = [orderedRoutes[i] for i in np.random.choice(range(len(orderedRoutes)), len(population), replace=1, p=probabilities)]
-        #newPopulation = orderedRoutes[np.random.choice(range(len(orderedRoutes)), len(population), replace=1, p=probabilities)]
 
         return newPopulation
 
