@@ -12,7 +12,9 @@ print("Running")
 class r0123456:
     def __init__(self):
         self.reporter = Reporter.Reporter(self.__class__.__name__)
-        self.age = 10
+        self.elimAge = 15
+        self.elimPercentage = 0.7
+        self.selPercentage = 0.7
 
     # The evolutionary algorithm's main loop
     def optimize(self, filename):
@@ -21,22 +23,23 @@ class r0123456:
         distanceMatrix = np.loadtxt(file, delimiter=",")
         file.close()
         # Your code here.
-        popSize = 1000
+        popSize = 100
         population = self.initPopulation(popSize, range(len(distanceMatrix[0])))
         start = time.time()
 
         nbIter = 0
-        while nbIter < 100 and len(population) > 1:
+        while nbIter < 500 and len(population) > 1:
             selectedPop = self.selection(population, distanceMatrix)
-            recombinatedPop = self.recombination(selectedPop)
-            mutatedPop = self.mutation(recombinatedPop)
-            finalPop = self.eliminationFitness(mutatedPop, distanceMatrix)
+            offspring = self.recombination(selectedPop)
+            mutated = self.mutation(offspring)
 
-            allObjectives = [self.getObjective(route[0], distanceMatrix) for route in finalPop]
+            population = self.eliminationFitness((mutated + population), distanceMatrix)
+            population = self.eliminationAge(population)
 
+            allObjectives = [self.getObjective(route[0], distanceMatrix) for route in population]
             bestObjective = min(allObjectives)
             meanObjective = np.mean(allObjectives)
-            bestSolution = np.array(finalPop[allObjectives.index(bestObjective)])
+            bestSolution = np.array(population[allObjectives.index(bestObjective)])
 
             # Call the reporter with:
             #  - the mean objective function value of the population
@@ -53,7 +56,6 @@ class r0123456:
                   "\t Best objective: ", bestObjective,
                   "\t Length of population: " , len(population))
 
-            population = finalPop
             # Update age variable for all routes
             for index in range(len(population)):
                 population[index][1] += 1
@@ -112,8 +114,10 @@ class r0123456:
         mean_fitness = np.mean(pop_fitness)
 
         # Select size of subset population
-        percentage = 0.01
-        subset_size = int(len(population) * percentage)
+        # this doesnt select 90% of the population, this means 90% of the population gets checked whether its fitness is above average
+        # the other unchecked 10% still get's added to the population
+        # dont know if this is the intented way TODO
+        subset_size = int(len(population) * self.elimPercentage)
 
         for _ in range(subset_size):
             index = random.randint(0, len(population) - 1)
@@ -127,7 +131,7 @@ class r0123456:
 
     def eliminationAge(self, population):
         for route in population:
-            if route[1] > self.age:
+            if route[1] > self.elimAge:
                 population.remove(route)
 
         return population
@@ -252,7 +256,7 @@ class r0123456:
         probabilities.reverse()
 
         # ATTENTION: you should change the variable "population" if you want only select a subset and not the whole input
-        newPopulation = [orderedRoutes[i] for i in np.random.choice(range(len(orderedRoutes)), len(population), replace=1, p=probabilities)]
+        newPopulation = [orderedRoutes[i] for i in np.random.choice(range(len(orderedRoutes)), int(len(population) * self.selPercentage), replace=1, p=probabilities)]
 
         return newPopulation
 
