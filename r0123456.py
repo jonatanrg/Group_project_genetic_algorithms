@@ -264,7 +264,7 @@ class r0123456:
         population = list()
 
         for index in range(size):
-            population.append([self.generateRoute(cityList), index])
+            population.append([self.generateRoute(cityList), 0])
         return population
 
     def getObjective(self, route, distanceMatrix):
