@@ -12,8 +12,8 @@ print("Running")
 class r0123456:
     def __init__(self):
         self.reporter = Reporter.Reporter(self.__class__.__name__)
-        self.elimAge = 15
-        self.elimPercentage = 0.7
+        self.elimAge = 5
+        self.elimPercentage = 0.5
         self.selPercentage = 0.7
 
     # The evolutionary algorithm's main loop
