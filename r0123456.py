@@ -12,9 +12,10 @@ print("Running")
 class r0123456:
     def __init__(self):
         self.reporter = Reporter.Reporter(self.__class__.__name__)
-        self.elimAge = 15
-        self.elimPercentage = 0.7
-        self.selPercentage = 0.7
+        # Tweak these to mess around with the population size. (Jonatan 31/10)
+        self.elimAge = 5
+        self.elimPercentage = 0.6
+        self.selPercentage = 0.5
 
     # The evolutionary algorithm's main loop
     def optimize(self, filename):
@@ -26,16 +27,14 @@ class r0123456:
         popSize = 100
         population = self.initPopulation(popSize, range(len(distanceMatrix[0])))
         start = time.time()
-
         nbIter = 0
         while nbIter < 500 and len(population) > 1:
             selectedPop = self.selection(population, distanceMatrix)
             offspring = self.recombination(selectedPop)
             mutated = self.mutation(offspring)
-
-            population = self.eliminationFitness((mutated + population), distanceMatrix)
-            population = self.eliminationAge(population)
-
+            population = self.eliminationTournament((mutated + population), 50, distanceMatrix)
+            population = self.eliminationAge(mutated+population)
+            
             allObjectives = [self.getObjective(route[0], distanceMatrix) for route in population]
             bestObjective = min(allObjectives)
             meanObjective = np.mean(allObjectives)
@@ -52,9 +51,9 @@ class r0123456:
                 break
 
             nbIter += 1
-            print("Iteration: " , nbIter,
+            print("Iteration: ", nbIter,
                   "\t Best objective: ", bestObjective,
-                  "\t Length of population: " , len(population))
+                  "\t Length of population: ", len(population))
 
             # Update age variable for all routes
             for index in range(len(population)):
@@ -105,29 +104,24 @@ class r0123456:
         newOffspring = [x for x in newOffspring if x]
         return newOffspring
 
-    def eliminationFitness(self, population, distanceMatrix):
-        # fitness-based elimination
-        pop_fitness = np.zeros(len(population))
-        for index in range(len(pop_fitness)):
-            pop_fitness = self.getObjective(population[index][0], distanceMatrix)
+    """k-Tournament elimination(generate random subset, pick the best sample from the subset, repeat). Probability set to p=1 for now."""
+    def eliminationTournament(self, population, k, distanceMatrix):
+        surviving_population = list()
 
-        mean_fitness = np.mean(pop_fitness)
+        # Loop adds routes to surviving_population as long as its length is less than the allowed percentage
+        while len(surviving_population) < int(self.elimPercentage*len(population)):
 
-        # Select size of subset population
-        # this doesnt select 90% of the population, this means 90% of the population gets checked whether its fitness is above average
-        # the other unchecked 10% still get's added to the population
-        # dont know if this is the intented way TODO
-        subset_size = int(len(population) * self.elimPercentage)
+            # Pick a population subset of size k.
+            tournament_subset_index = np.random.choice(range(len(population)), k)
+            tournament_subset = [population[i] for i in tournament_subset_index]
 
-        for _ in range(subset_size):
-            index = random.randint(0, len(population) - 1)
-            fitness = self.getObjective(population[index][0], distanceMatrix)
+            # List of all objective values corresponding to the tournament subset route.
+            fitness_list = [self.getObjective(route[0], distanceMatrix) for route in tournament_subset]
 
-            # Eliminate elements with below average fitness
-            if fitness < mean_fitness:
-                del population[index]
-
-        return population
+            # Extract and append the winner of the tournament(minimal objective value)
+            tournament_winner_index = fitness_list.index(min(fitness_list))
+            surviving_population.append(tournament_subset[tournament_winner_index])
+        return surviving_population
 
     def eliminationAge(self, population):
         for route in population:
@@ -171,7 +165,7 @@ class r0123456:
         # child is initialized as a list with -1 values
         child = list(-1 for _ in range(len(parent1)))
 
-        # a random amount of positions is generated 
+        # a random amount of positions is generated
         for _ in range(random.randint(0, len(parent1) - 1)):
             position = random.randint(0, len(parent1) - 1)
             if position not in positions:
