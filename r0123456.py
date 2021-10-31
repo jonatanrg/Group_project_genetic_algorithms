@@ -2,6 +2,7 @@ import math
 import random
 import numpy as np
 import time
+from collections import deque
 
 import Reporter
 
@@ -16,6 +17,7 @@ class r0123456:
         self.elimAge = 5
         self.elimPercentage = 0.6
         self.selPercentage = 0.5
+        self.maxIterSameObj = 20
 
     # The evolutionary algorithm's main loop
     def optimize(self, filename):
@@ -27,8 +29,9 @@ class r0123456:
         popSize = 100
         population = self.initPopulation(popSize, range(len(distanceMatrix[0])))
         start = time.time()
+        lastBestObjectives = deque(range(self.maxIterSameObj), self.maxIterSameObj)
         nbIter = 0
-        while nbIter < 500 and len(population) > 1:
+        while len(population) > 1 and lastBestObjectives[0] != lastBestObjectives[self.maxIterSameObj - 1]:
             selectedPop = self.selection(population, distanceMatrix)
             offspring = self.recombination(selectedPop)
             mutated = self.mutation(offspring)
@@ -40,6 +43,7 @@ class r0123456:
             meanObjective = np.mean(allObjectives)
             bestSolution = np.array(population[allObjectives.index(bestObjective)])
 
+            lastBestObjectives.append(bestObjective)
             # Call the reporter with:
             #  - the mean objective function value of the population
             #  - the best objective function value of the population
@@ -49,7 +53,6 @@ class r0123456:
 
             if timeLeft < 0:
                 break
-
             nbIter += 1
             print("Iteration: ", nbIter,
                   "\t Best objective: ", bestObjective,
