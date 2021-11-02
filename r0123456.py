@@ -11,13 +11,22 @@ print("Running")
 
 # Modify the class name to match your student number.
 class r0123456:
-    def __init__(self):
+    def __init__(self, parameters=None):
         self.reporter = Reporter.Reporter(self.__class__.__name__)
         # Tweak these to mess around with the population size. (Jonatan 31/10)
-        self.elimAge = 5
-        self.elimPercentage = 0.6
-        self.selPercentage = 0.5
-        self.maxIterSameObj = 20
+
+        if parameters is None:
+            self.elimAge = 5
+            self.elimPercentage = 0.6
+            self.selPercentage = 0.5
+            self.maxIterSameObj = 20
+            self.recombOperator = 'both'
+        else:
+            self.elimAge = parameters['elimAge']
+            self.elimPercentage = parameters['elimPercentage']
+            self.selPercentage = parameters['selPercentage']
+            self.maxIterSameObj = parameters['maxIterSameObj']
+            self.recombOperator = parameters['recombOperator']
 
     # The evolutionary algorithm's main loop
     def optimize(self, filename):
@@ -67,7 +76,8 @@ class r0123456:
         print('Best Solution: ' + str(bestSolution[0]))
         print('Objective function output: ' + str(bestObjective))
         print('Total time elapsed: ' + str(end - start) + ' seconds')
-        return 0
+
+        return {'bestObjective': bestObjective, 'timeElapsed': (end-start)}
 
     def mutation(self, offspring):
         # Swap mutation. Pick two genes from the population and randomly pick
@@ -146,8 +156,15 @@ class r0123456:
         # for each pair OX and POS operators are executed, childeren are added to newPop
         newPop = []
         for pair in population:
-            newPop.append(self.OX(pair))
-            newPop.append(self.POS(pair))
+            if self.recombOperator == 'both':
+                newPop.append(self.OX(pair))
+                newPop.append(self.POS(pair))
+            elif self.recombOperator == 'OX':
+                newPop.append(self.OX(pair))
+                newPop.append(self.OX(pair[1], pair[0]))
+            elif self.recombOperator == 'POS':
+                newPop.append(self.POS(pair))
+                newPop.append(self.POS(pair[1], pair[0]))
 
         # if the population was uneven, the not used gene is added again
         if gene is not None:
