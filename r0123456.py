@@ -1,10 +1,10 @@
-import math
+import matplotlib.pyplot as plt
 import random
 import numpy as np
 import time
 from collections import deque
-
 import Reporter
+import json
 
 print("Running")
 
@@ -19,7 +19,7 @@ class r0123456:
             self.elimAge = 5
             self.elimPercentage = 0.6
             self.selPercentage = 0.5
-            self.maxIterSameObj = 20
+            self.maxIterSameObj = 5
             self.recombOperator = 'both'
         else:
             self.elimAge = parameters['elimAge']
@@ -34,18 +34,36 @@ class r0123456:
         file = open(filename)
         distanceMatrix = np.loadtxt(file, delimiter=",")
         file.close()
-        # Your code here.
         popSize = 100
         population = self.initPopulation(popSize, range(len(distanceMatrix[0])))
         start = time.time()
         lastBestObjectives = deque(range(self.maxIterSameObj), self.maxIterSameObj)
         nbIter = 0
+
+        totalSelectionTime = 0
+        totalMutationTime = 0
+        totalEliminationTime = 0
+        totalRecombinationTime = 0
+
+        variances = []
         while len(population) > 1 and lastBestObjectives[0] != lastBestObjectives[self.maxIterSameObj - 1]:
+
+            selStart = time.time()
             selectedPop = self.selection(population, distanceMatrix)
+            totalSelectionTime += (time.time() - selStart)
+
+            recomStart = time.time()
             offspring = self.recombination(selectedPop)
+            totalRecombinationTime += (time.time() - recomStart)
+
+            mutStart = time.time()
             mutated = self.mutation(offspring)
+            totalMutationTime += (time.time() - mutStart)
+
+            elimStart = time.time()
             population = self.eliminationTournament((mutated + population), 50, distanceMatrix)
-            population = self.eliminationAge(mutated+population)
+            population = self.eliminationAge(mutated + population)
+            totalEliminationTime += (time.time() - elimStart)
             
             allObjectives = [self.getObjective(route[0], distanceMatrix) for route in population]
             bestObjective = min(allObjectives)
@@ -53,6 +71,7 @@ class r0123456:
             bestSolution = np.array(population[allObjectives.index(bestObjective)])
 
             lastBestObjectives.append(bestObjective)
+            variances.append(np.var(allObjectives))
             # Call the reporter with:
             #  - the mean objective function value of the population
             #  - the best objective function value of the population
@@ -75,9 +94,29 @@ class r0123456:
 
         print('Best Solution: ' + str(bestSolution[0]))
         print('Objective function output: ' + str(bestObjective))
+
+        print('############### TIME PERFROMANCE ###################')
+        print('Total selection time: ' + str(totalSelectionTime) + ' seconds')
+
+        print('Total recombination time: ' + str(totalRecombinationTime) + ' seconds')
+
+        print('Total mutation time: ' + str(totalMutationTime) + ' seconds')
+
+        print('Total elimination time: ' + str(totalEliminationTime) + ' seconds')
+
         print('Total time elapsed: ' + str(end - start) + ' seconds')
 
-        return {'bestObjective': bestObjective, 'timeElapsed': (end-start)}
+        
+
+        return {
+            'bestObjective': bestObjective, 
+            'timeElapsed': {
+                'sel': totalSelectionTime,
+                'rec': totalRecombinationTime,
+                'mut': totalMutationTime,
+                'elim': totalEliminationTime,
+                'tot': (end - start)},
+            'variances': variances}
 
     def mutation(self, offspring):
         # Swap mutation. Pick two genes from the population and randomly pick
@@ -161,10 +200,10 @@ class r0123456:
                 newPop.append(self.POS(pair))
             elif self.recombOperator == 'OX':
                 newPop.append(self.OX(pair))
-                newPop.append(self.OX(pair[1], pair[0]))
+                newPop.append(self.OX([pair[1], pair[0]]))
             elif self.recombOperator == 'POS':
                 newPop.append(self.POS(pair))
-                newPop.append(self.POS(pair[1], pair[0]))
+                newPop.append(self.POS([pair[1], pair[0]]))
 
         # if the population was uneven, the not used gene is added again
         if gene is not None:
@@ -304,4 +343,49 @@ class r0123456:
 
 if __name__ == '__main__':
     test = r0123456()
-    test.optimize('tour29.csv')
+    runs = 5
+
+    meanSelectionTime = 0
+    meanRecombinationTime = 0
+    meanMutationTime = 0
+    meanEliminationTime = 0
+    meanTotalTime = 0
+
+    plots = 0
+
+    for _ in range(runs):
+        output = test.optimize('tour29.csv')
+        times = output['timeElapsed']
+        
+        meanSelectionTime += times['sel']
+        meanRecombinationTime += times['rec']
+        meanMutationTime += times['mut']
+        meanEliminationTime += times['elim']
+        meanTotalTime += times['tot']
+
+        variances = output['variances']
+
+        # fig = plt.figure()
+        # ax = fig.add_subplot(1,1,1)
+        # ax.plot(range(len(variances)), variances)
+        # ax.set_title('Variance of the population')
+        # ax.set_xlabel('Iterations')
+        # ax.set_ylabel('Variance')
+        # plt.savefig(f'plots/variance_{plots}.png')
+        # plots += 1
+
+    meanSelectionTime = meanSelectionTime/runs
+    meanRecombinationTime = meanRecombinationTime/runs
+    meanMutationTime = meanMutationTime/runs
+    meanEliminationTime = meanEliminationTime/runs
+    meanTotalTime = meanTotalTime/runs
+
+    with open('time_performance.txt', 'w') as outfile: 
+        outfile.write(
+            'Amount of runs: ' + str(runs) + '\n' +
+            'Total time: ' + str(meanTotalTime) + '\n' +
+            'Selection time: ' + str(meanSelectionTime) + '\n' +
+            'Recombination time: ' + str(meanRecombinationTime) + '\n' +
+            'Mutation time: ' + str(meanMutationTime) + '\n' +
+            'Elimination time: ' + str(meanEliminationTime) + '\n')
+
