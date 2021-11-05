@@ -45,6 +45,9 @@ class r0123456:
         totalEliminationTime = 0
         totalRecombinationTime = 0
 
+        bestObjectiveValues = []
+        meanObjectiveValues = []
+
         variances = []
         while len(population) > 1 and lastBestObjectives[0] != lastBestObjectives[self.maxIterSameObj - 1]:
 
@@ -86,6 +89,10 @@ class r0123456:
                   "\t Best objective: ", bestObjective,
                   "\t Length of population: ", len(population))
 
+            # Add mean and best values to list
+            bestObjectiveValues.append(bestObjective)
+            meanObjectiveValues.append(meanObjective)
+
             # Update age variable for all routes
             for index in range(len(population)):
                 population[index][1] += 1
@@ -106,7 +113,11 @@ class r0123456:
 
         print('Total time elapsed: ' + str(end - start) + ' seconds')
 
-        
+        # Visualisations
+        plt.plot(bestObjectiveValues)
+        plt.plot(meanObjectiveValues)
+        plt.xlim(1, nbIter)
+        plt.show()
 
         return {
             'bestObjective': bestObjective, 
@@ -137,7 +148,6 @@ class r0123456:
         # newOffspring = [x for x in newOffspring if x]
         # return newOffspring
 
-        # todo(loris): add inverion mutation
         newOffspring = [[]]
         for i in range(len(offspring)):
             partition1 = random.randint(1, len(offspring[i][0]) - 1)
