@@ -374,6 +374,8 @@ if __name__ == '__main__':
     bestObjectivesOverRuns = []
 
     for _ in range(runs):
+        print("\n--- Run", _ ,"---")
+
         output = test.optimize('tour29.csv')
         times = output['timeElapsed']
         
