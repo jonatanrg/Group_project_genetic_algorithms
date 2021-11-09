@@ -1,3 +1,5 @@
+import statistics
+
 import matplotlib.pyplot as plt
 import random
 import numpy as np
@@ -19,7 +21,7 @@ class r0123456:
             self.elimAge = 5
             self.elimPercentage = 0.6
             self.selPercentage = 0.5
-            self.maxIterSameObj = 5
+            self.maxIterSameObj = 10
             self.recombOperator = 'both'
         else:
             self.elimAge = parameters['elimAge']
@@ -67,7 +69,7 @@ class r0123456:
             population = self.eliminationTournament((mutated + population), 50, distanceMatrix)
             population = self.eliminationAge(mutated + population)
             totalEliminationTime += (time.time() - elimStart)
-            
+
             allObjectives = [self.getObjective(route[0], distanceMatrix) for route in population]
             bestObjective = min(allObjectives)
             meanObjective = np.mean(allObjectives)
@@ -84,9 +86,11 @@ class r0123456:
 
             if timeLeft < 0:
                 break
+
             nbIter += 1
             print("Iteration: ", nbIter,
                   "\t Best objective: ", bestObjective,
+                  "\t Mean objective: ", meanObjective,
                   "\t Length of population: ", len(population))
 
             # Add mean and best values to list
@@ -96,8 +100,12 @@ class r0123456:
             # Update age variable for all routes
             for index in range(len(population)):
                 population[index][1] += 1
+
         # Your code here.
         end = time.time()
+
+        print("allFinalObjectives: ", allObjectives)
+        # print("finalPop: ", population)
 
         print('Best Solution: ' + str(bestSolution[0]))
         print('Objective function output: ' + str(bestObjective))
@@ -304,7 +312,7 @@ class r0123456:
 
         # store all the current solutions (routes) and the respective Objective values
         for route in population:
-            routes.append(route)
+            routes.append(route)   # each route is structured like this: [[sequence_of_cities][age]]
             allObjectives.append(self.getObjective(route[0], distanceMatrix))
 
         integerList = [i for i in range(1, len(allObjectives) + 1)]
@@ -327,10 +335,10 @@ class r0123456:
         route = random.sample(cityList, len(cityList))
         return route
 
-    def initPopulation(self, size, cityList):
+    def initPopulation(self, popSize, cityList):
         population = list()
 
-        for index in range(size):
+        for index in range(popSize):
             population.append([self.generateRoute(cityList), 0])
         return population
 
@@ -353,7 +361,7 @@ class r0123456:
 
 if __name__ == '__main__':
     test = r0123456()
-    runs = 5
+    runs = 10
 
     meanSelectionTime = 0
     meanRecombinationTime = 0
@@ -362,6 +370,8 @@ if __name__ == '__main__':
     meanTotalTime = 0
 
     plots = 0
+
+    bestObjectivesOverRuns = []
 
     for _ in range(runs):
         output = test.optimize('tour29.csv')
@@ -375,6 +385,8 @@ if __name__ == '__main__':
 
         variances = output['variances']
 
+        bestObjectivesOverRuns.append(output["bestObjective"])
+
         # fig = plt.figure()
         # ax = fig.add_subplot(1,1,1)
         # ax.plot(range(len(variances)), variances)
@@ -383,6 +395,19 @@ if __name__ == '__main__':
         # ax.set_ylabel('Variance')
         # plt.savefig(f'plots/variance_{plots}.png')
         # plots += 1
+
+
+    bestObjectiveOverRuns = min(bestObjectivesOverRuns)
+    meanObjectiveOverRuns = statistics.mean(bestObjectivesOverRuns)
+    stdObjectiveOverRuns = statistics.stdev(bestObjectivesOverRuns)
+    varObjectiveOverRuns = statistics.variance(bestObjectivesOverRuns)
+
+    print("\n>>> Final statistics over all the", runs, "runs:")
+    print("Best objective value over runs :", bestObjectiveOverRuns)
+    print("Mean objective value over runs :", meanObjectiveOverRuns)
+    print("Standard Deviation of objective values over runs :", stdObjectiveOverRuns)
+    print("Variance of objective values over runs :", varObjectiveOverRuns)
+
 
     meanSelectionTime = meanSelectionTime/runs
     meanRecombinationTime = meanRecombinationTime/runs
