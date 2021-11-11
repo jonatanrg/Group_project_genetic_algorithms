@@ -1,15 +1,12 @@
 import statistics
-
 import matplotlib.pyplot as plt
 import random
 import numpy as np
 import time
 from collections import deque
 import Reporter
-import json
 
 print("Running")
-
 
 # Modify the class name to match your student number.
 class r0123456:
@@ -124,11 +121,13 @@ class r0123456:
         # Visualisations
         plt.plot(bestObjectiveValues)
         plt.plot(meanObjectiveValues)
+        plt.title("Convergence Graph")
+        plt.xlabel("Iterations")
+        plt.ylabel("Fitness Value")
         plt.xlim(1, nbIter)
-        plt.show()
 
         return {
-            'bestObjective': bestObjective, 
+            'bestObjective': bestObjective,
             'timeElapsed': {
                 'sel': totalSelectionTime,
                 'rec': totalRecombinationTime,
@@ -378,7 +377,7 @@ if __name__ == '__main__':
 
         output = test.optimize('tour29.csv')
         times = output['timeElapsed']
-        
+
         meanSelectionTime += times['sel']
         meanRecombinationTime += times['rec']
         meanMutationTime += times['mut']
@@ -395,8 +394,10 @@ if __name__ == '__main__':
         # ax.set_title('Variance of the population')
         # ax.set_xlabel('Iterations')
         # ax.set_ylabel('Variance')
-        # plt.savefig(f'plots/variance_{plots}.png')
-        # plots += 1
+        # plt.savefig(f'Visualisations/variance_{plots}.png')
+        plt.savefig(f'Visualisations/objective_{plots}.png')
+        plt.clf()
+        plots += 1
 
 
     bestObjectiveOverRuns = min(bestObjectivesOverRuns)
@@ -417,7 +418,7 @@ if __name__ == '__main__':
     meanEliminationTime = meanEliminationTime/runs
     meanTotalTime = meanTotalTime/runs
 
-    with open('time_performance.txt', 'w') as outfile: 
+    with open('time_performance.txt', 'w') as outfile:
         outfile.write(
             'Amount of runs: ' + str(runs) + '\n' +
             'Total time: ' + str(meanTotalTime) + '\n' +
