@@ -1,6 +1,6 @@
-Amount of runs: 5
-Total time: 6.816128206253052
-Selection time: 0.14267630577087403
-Recombination time: 0.131333589553833
-Mutation time: 0.014812946319580078
-Elimination time: 6.38437933921814
+Amount of runs: 10
+Total time: 19.222182440757752
+Selection time: 0.35447278022766116
+Recombination time: 0.2666797399520874
+Mutation time: 0.03124823570251465
+Elimination time: 18.158446764945985
