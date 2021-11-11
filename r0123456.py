@@ -119,12 +119,12 @@ class r0123456:
         print('Total time elapsed: ' + str(end - start) + ' seconds')
 
         # Visualisations
-        plt.plot(bestObjectiveValues)
-        plt.plot(meanObjectiveValues)
-        plt.title("Convergence Graph")
-        plt.xlabel("Iterations")
-        plt.ylabel("Fitness Value")
-        plt.xlim(1, nbIter)
+        #plt.plot(bestObjectiveValues)
+        #plt.plot(meanObjectiveValues)
+        #plt.title("Convergence Graph")
+        #plt.xlabel("Iterations")
+        #plt.ylabel("Fitness Value")
+        #plt.xlim(1, nbIter)
 
         return {
             'bestObjective': bestObjective,
@@ -368,9 +368,17 @@ if __name__ == '__main__':
     meanEliminationTime = 0
     meanTotalTime = 0
 
+    selectionTimeList = []
+    recombinationTimeList = []
+    mutationTimeList = []
+    eliminationTimeList = []
+    totalTimeList = []
+
     plots = 0
 
     bestObjectivesOverRuns = []
+
+
 
     for _ in range(runs):
         print("\n--- Run", _ ,"---")
@@ -386,7 +394,17 @@ if __name__ == '__main__':
 
         variances = output['variances']
 
+        # create lists of time elapsed for each run (each list a different type of time)
+        selectionTimeList.append(times['sel'])
+        recombinationTimeList.append(times['rec'])
+        mutationTimeList.append(times['mut'])
+        eliminationTimeList.append(times['elim'])
+        totalTimeList.append(times['tot'])
+
         bestObjectivesOverRuns.append(output["bestObjective"])
+
+
+
 
         # fig = plt.figure()
         # ax = fig.add_subplot(1,1,1)
@@ -395,9 +413,9 @@ if __name__ == '__main__':
         # ax.set_xlabel('Iterations')
         # ax.set_ylabel('Variance')
         # plt.savefig(f'Visualisations/variance_{plots}.png')
-        plt.savefig(f'Visualisations/objective_{plots}.png')
-        plt.clf()
-        plots += 1
+        #plt.savefig(f'Visualisations/objective_{plots}.png')
+        #plt.clf()
+        #plots += 1
 
 
     bestObjectiveOverRuns = min(bestObjectivesOverRuns)
@@ -405,11 +423,20 @@ if __name__ == '__main__':
     stdObjectiveOverRuns = statistics.stdev(bestObjectivesOverRuns)
     varObjectiveOverRuns = statistics.variance(bestObjectivesOverRuns)
 
+
     print("\n>>> Final statistics over all the", runs, "runs:")
     print("Best objective value over runs :", bestObjectiveOverRuns)
     print("Mean objective value over runs :", meanObjectiveOverRuns)
     print("Standard Deviation of objective values over runs :", stdObjectiveOverRuns)
     print("Variance of objective values over runs :", varObjectiveOverRuns)
+
+    print("\n best total time:")
+    print("\n mean total time:")
+    print("\n best total time:")
+
+
+
+
 
 
     meanSelectionTime = meanSelectionTime/runs
@@ -426,4 +453,31 @@ if __name__ == '__main__':
             'Recombination time: ' + str(meanRecombinationTime) + '\n' +
             'Mutation time: ' + str(meanMutationTime) + '\n' +
             'Elimination time: ' + str(meanEliminationTime) + '\n')
+
+
+    ######## boxplots
+
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    import pandas as pd
+
+    #data = {'selection': selectionTimeList, 'recombination': recombinationTimeList,'mutation': mutationTimeList, 'elimination': eliminationTimeList,
+
+    data = {'Total time': totalTimeList}
+
+    # Create DataFrame
+    dataFrame = pd.DataFrame(data)
+    seaPlot = sns.boxplot(data = dataFrame)
+    seaPlot.set(ylabel="Seconds elapsed")
+    seaFig = seaPlot.get_figure()
+    seaFig.savefig('timeBoxPlot.png')
+
+
+    #data2 = {'Best objectives': bestObjectivesOverRuns}
+
+    #dataFrame2 = pd.DataFrame(data2)
+    #seaPlot2 = sns.boxplot(data = dataFrame2)
+    #seaPlot2.set(ylabel="Scores")
+    #seaFig2 = seaPlot2.get_figure()
+    #seaFig2.savefig('objBoxPlot2.png')
 
